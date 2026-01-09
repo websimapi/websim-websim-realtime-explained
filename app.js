@@ -5,33 +5,39 @@ import { Copy, Users, Globe, Zap, Check, Terminal, Share2 } from 'lucide-react';
 
 const html = htm.bind(React.createElement);
 
-const DOCS_MARKDOWN = `### 🍊 Reddit Devvit Realtime Architecture Guide
+const DOCS_MARKDOWN = `Reddit's Developer Platform (Devvit) enables real-time multiplayer experiences through its **Realtime** capability, which provides low-latency synchronization between users and server-driven events. This system allows developers to build live scoreboards, multiplayer games (like r/Pixelary), and interactive experiences where users see each other's changes without observable lag [[Welcome to Devvit](https://developers.reddit.com/docs/0.11); [Realtime Overview](https://developers.reddit.com/docs/capabilities/realtime/overview)].
 
-**1. Core Concepts: Client/Server Model**
-Unlike Websim's P2P model, Reddit uses an authoritative server model for security.
-- **Client**: Subscribes to "channels" for event streams.
-- **Server**: Validates actions and broadcasts updates via backend logic.
-- **Redis**: The "source of truth" (XP, scores, positions) persisting across sessions.
+### Core Architecture
+Realtime functionality follows a client/server architecture designed to ensure consistency and security:
 
-**2. Implementation: Blocks vs Web**
+*   **Client-side (Subscription):** Interactive posts or webviews subscribe to "channels" to receive event streams [[Realtime in Devvit Web](https://developers.reddit.com/docs/capabilities/realtime/overview)].
+*   **Server-side (Authoritative):** Message sending is typically controlled by server-side logic to prevent cheating or inconsistent states. Developers use an authoritative server model where the backend validates actions and broadcasts updates [[What’s a Raid event?](https://developers.reddit.com/docs/blog/riddonkulous#whats-a-raid-event); [Realtime in Devvit Web](https://developers.reddit.com/docs/capabilities/realtime/overview)].
+*   **Data Persistence:** Realtime is frequently paired with **Redis**, a high-performance in-memory data store, to maintain a "source of truth" for game states (like player XP, scores, or positions) that persists across sessions [[Realtime Overview](https://developers.reddit.com/docs/capabilities/realtime/overview); [Saving Data to Reddit](https://developers.reddit.com/docs/quickstart/quickstart-unity#communicate-between-unity-and-reddit)].
 
-**A. Devvit Blocks (Native UI)**
-- \`useChannel\`: Hook to subscribe to channels (handle \`onMessage\`, \`onConnect\`).
-- \`channel.send\`: Peer-to-peer sync (client-to-client).
-- \`context.realtime.send\`: Backend push (server-to-client).
+### Implementation Methods
+The implementation varies slightly depending on whether you are using **Devvit Blocks** (Reddit's native UI toolkit) or **Devvit Web** (using web technologies like React or Phaser).
 
-**B. Devvit Web (Webview/Phaser)**
-- **Client**: Use \`connectRealtime\` to manage socket lifecycle.
-- **Server**: Webview sends HTTP req -> Server Logic -> \`realtime.send\` broadcasts to channel.
+#### 1. Devvit Blocks
+In the Blocks environment, real-time interactions are handled through hooks:
+*   **\`useChannel\`**: This hook is defined within the post's render function. It allows the post to subscribe to a channel and define handlers like \`onMessage\` (to update local UI state when data arrives) and \`onConnect\` [[Realtime in Devvit Blocks](https://developers.reddit.com/docs/capabilities/realtime/realtime_in_devvit_blocks)].
+*   **\`channel.send\`**: Recommended for peer-to-peer synchronization, allowing clients to publish data to others on the same channel [[Realtime in Devvit Blocks](https://developers.reddit.com/docs/capabilities/realtime/realtime_in_devvit_blocks)].
+*   **\`context.realtime.send\`**: Used by the backend (e.g., in a scheduled job or trigger) to "push" updates to all subscribed clients [[Realtime in Devvit Blocks](https://developers.reddit.com/docs/capabilities/realtime/realtime_in_devvit_blocks)].
 
-**3. Example Flow: "Raid" Event**
-1. **Redis**: Stores Boss Health.
-2. **Action**: Player attacks -> Server validates & updates Redis.
-3. **Sync**: Server uses \`realtime.send\` to push new health to all clients.
+#### 2. Devvit Web (Webview)
+For more complex games (like those built with Phaser), the architecture is split:
+*   **Client-side (\`connectRealtime\`)**: A connection object is created that listens for messages and manages the lifecycle (connect/disconnect) of the socket [[Realtime in Devvit Web](https://developers.reddit.com/docs/capabilities/realtime/overview)].
+*   **Server-side (\`realtime.send\`)**: The server receives requests from the webview (often via HTTP), processes the game logic, and then uses the \`realtime\` plugin to broadcast the result to the relevant channel [[Realtime in Devvit Web](https://developers.reddit.com/docs/capabilities/realtime/overview)].
 
-**4. Quotas**
-- **Throughput**: 100 messages/sec per installation.
-- **Payload**: 1 MB max size.`;
+### Practical Example: A "Raid" Event
+In the game *Riddonkulous*, multiplayer "Raid" events were powered by this model:
+1.  **State Management:** Redis stored the boss's health and player progress [[What’s a Raid event?](https://developers.reddit.com/docs/blog/riddonkulous#whats-a-raid-event)].
+2.  **Coordination:** When one player solved a riddle, the server updated the Redis state and used \`realtime.send\` to broadcast the new state to all other players in the raid [[What’s a Raid event?](https://developers.reddit.com/docs/blog/riddonkulous#whats-a-raid-event)].
+3.  **Synchronization:** Every connected player's UI updated instantly to show the boss taking damage or the riddle being solved [[Realtime Overview](https://developers.reddit.com/docs/capabilities/realtime/overview)].
+
+### System Limits
+To ensure platform stability, the following quotas apply:
+*   **Throughput:** Up to 100 messages per second per app installation [[Realtime in Devvit Blocks](https://developers.reddit.com/docs/capabilities/realtime/realtime_in_devvit_blocks)].
+*   **Payload Size:** Each message can be up to 1 MB in size [[Realtime in Devvit Blocks](https://developers.reddit.com/docs/capabilities/realtime/realtime_in_devvit_blocks)].`;
 
 const App = () => {
     const [room, setRoom] = useState(null);
@@ -207,7 +213,7 @@ const App = () => {
                 </div>
                 <div className="p-6 md:p-8 bg-[#050505]">
                     <div className="prose prose-invert max-w-none">
-                        <pre className="text-sm leading-relaxed overflow-x-auto p-4 rounded-xl bg-black/50 border border-white/5 text-gray-300">
+                        <pre className="text-sm leading-relaxed whitespace-pre-wrap overflow-x-auto p-4 rounded-xl bg-black/50 border border-white/5 text-gray-300 font-mono">
                             ${DOCS_MARKDOWN}
                         </pre>
                     </div>
