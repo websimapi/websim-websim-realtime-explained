@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
+import htm from 'htm';
 import { Copy, Users, Globe, Zap, Check, Terminal, Share2 } from 'lucide-react';
+
+const html = htm.bind(React.createElement);
 
 const DOCS_MARKDOWN = `### 🌐 Websim Realtime Architecture
 
@@ -99,38 +102,38 @@ const App = () => {
         playClick();
     };
 
-    if (!room) return (
+    if (!room) return html`
         <div className="h-screen flex items-center justify-center bg-black text-white">
-            <Zap className="animate-pulse mr-2" /> Initializing Realtime Connection...
+            <${Zap} className="animate-pulse mr-2" /> Initializing Realtime Connection...
         </div>
-    );
+    `;
 
-    return (
+    return html`
         <div 
             className="min-h-screen p-4 md:p-8 max-w-5xl mx-auto"
-            onMouseMove={handleMouseMove}
+            onMouseMove=${handleMouseMove}
         >
-            {/* Realtime Cursors */}
-            {Object.entries(presence).map(([id, data]) => {
+            ${/* Realtime Cursors */
+            Object.entries(presence).map(([id, data]) => {
                 if (id === room.clientId || !data.cursor) return null;
                 const peer = peers[id] || { username: 'Unknown' };
-                return (
+                return html`
                     <div 
-                        key={id}
+                        key=${id}
                         className="presence-cursor fixed flex flex-col items-center"
-                        style={{ left: `${data.cursor.x}%`, top: `${data.cursor.y}%` }}
+                        style=${{ left: `${data.cursor.x}%`, top: `${data.cursor.y}%` }}
                     >
                         <div className="w-4 h-4 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50 border-2 border-white" />
                         <span className="text-[10px] bg-black/80 px-1 rounded mt-1 whitespace-nowrap border border-white/20">
-                            {peer.username}
+                            ${peer.username}
                         </span>
                     </div>
-                );
+                `;
             })}
 
             <header className="mb-12">
                 <div className="flex items-center gap-2 text-blue-400 font-bold mb-2">
-                    <Zap size={20} />
+                    <${Zap} size=${20} />
                     <span>WEBSIM REALTIME GUIDE</span>
                 </div>
                 <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">
@@ -142,11 +145,10 @@ const App = () => {
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-                {/* Demo Card 1: Room State */}
                 <div className="glass p-6 rounded-2xl relative overflow-hidden">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2 text-purple-400">
-                            <Globe size={20} />
+                            <${Globe} size=${20} />
                             <h2 className="font-semibold uppercase tracking-wider text-sm">Room State</h2>
                         </div>
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">SHARED GLOBAL</span>
@@ -156,86 +158,83 @@ const App = () => {
                     <div className="space-y-4">
                         <label className="text-xs text-gray-500 uppercase font-bold">World Theme Color</label>
                         <div className="flex gap-2">
-                            {['#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#22c55e'].map(c => (
+                            ${['#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#22c55e'].map(c => html`
                                 <button 
-                                    key={c}
-                                    onClick={() => updateSharedColor(c)}
-                                    className={`w-10 h-10 rounded-lg transition-transform hover:scale-110 active:scale-95 border-2 ${roomState.themeColor === c ? 'border-white' : 'border-transparent'}`}
-                                    style={{ backgroundColor: c }}
+                                    key=${c}
+                                    onClick=${() => updateSharedColor(c)}
+                                    className=${`w-10 h-10 rounded-lg transition-transform hover:scale-110 active:scale-95 border-2 ${roomState.themeColor === c ? 'border-white' : 'border-transparent'}`}
+                                    style=${{ backgroundColor: c }}
                                 />
-                            ))}
+                            `)}
                         </div>
                         <div className="p-3 bg-black/40 rounded-lg border border-white/5">
-                            <code className="text-xs text-blue-300">roomState.themeColor = "{roomState.themeColor || '#3b82f6'}"</code>
+                            <code className="text-xs text-blue-300">roomState.themeColor = "${roomState.themeColor || '#3b82f6'}"</code>
                         </div>
                     </div>
                 </div>
 
-                {/* Demo Card 2: Presence */}
                 <div className="glass p-6 rounded-2xl">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2 text-green-400">
-                            <Users size={20} />
+                            <${Users} size=${20} />
                             <h2 className="font-semibold uppercase tracking-wider text-sm">Active Peers</h2>
                         </div>
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300 border border-green-500/30">
-                            {Object.keys(peers).length} ONLINE
+                            ${Object.keys(peers).length} ONLINE
                         </span>
                     </div>
                     <div className="space-y-2 max-h-[160px] overflow-y-auto pr-2 custom-scrollbar">
-                        {Object.entries(peers).map(([id, peer]) => (
-                            <div key={id} className="flex items-center justify-between bg-white/5 p-2 rounded-lg border border-white/5">
+                        ${Object.entries(peers).map(([id, peer]) => html`
+                            <div key=${id} className="flex items-center justify-between bg-white/5 p-2 rounded-lg border border-white/5">
                                 <div className="flex items-center gap-3">
-                                    <img src={peer.avatarUrl} className="w-8 h-8 rounded-full border border-white/20" alt="" />
-                                    <span className="text-sm font-medium">{peer.username}</span>
+                                    <img src=${peer.avatarUrl} className="w-8 h-8 rounded-full border border-white/20" alt="" />
+                                    <span className="text-sm font-medium">${peer.username}</span>
                                 </div>
-                                {id === room.clientId && <span className="text-[10px] text-gray-500 italic">You</span>}
+                                ${id === room.clientId && html`<span className="text-[10px] text-gray-500 italic">You</span>`}
                             </div>
-                        ))}
+                        `)}
                     </div>
                 </div>
             </div>
 
-            {/* Explanation / Copy Section */}
             <section className="glass rounded-3xl overflow-hidden border border-white/10 mb-20">
                 <div className="bg-white/5 p-4 flex items-center justify-between border-b border-white/10">
                     <div className="flex items-center gap-2 font-bold text-gray-300">
-                        <Terminal size={18} />
+                        <${Terminal} size=${18} />
                         <span>Technical Documentation</span>
                     </div>
                     <button 
-                        onClick={copyToClipboard}
+                        onClick=${copyToClipboard}
                         className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all active:scale-95 shadow-lg shadow-blue-600/20"
                     >
-                        <Copy size={16} />
+                        <${Copy} size=${16} />
                         Copy Technical Summary
                     </button>
                 </div>
                 <div className="p-6 md:p-8 bg-[#050505]">
                     <div className="prose prose-invert max-w-none">
                         <pre className="text-sm leading-relaxed overflow-x-auto p-4 rounded-xl bg-black/50 border border-white/5 text-gray-300">
-                            {DOCS_MARKDOWN}
+                            ${DOCS_MARKDOWN}
                         </pre>
                     </div>
                 </div>
             </section>
 
-            {/* Floating Toast */}
-            {showToast && (
+            ${showToast && html`
                 <div className="copy-toast fixed bottom-8 left-1/2 -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 z-[100] font-bold">
-                    <Check size={20} />
+                    <${Check} size=${20} />
                     Documentation copied to clipboard!
                 </div>
-            )}
+            `}
 
-            {/* Dynamic Background */}
             <div 
                 className="fixed inset-0 -z-10 transition-colors duration-1000 opacity-20"
-                style={{ backgroundColor: roomState.themeColor || '#3b82f6' }}
+                style=${{ backgroundColor: roomState.themeColor || '#3b82f6' }}
             />
             <div className="fixed inset-0 -z-20 bg-black" />
         </div>
-    );
+    `;
 };
 
-ReactDOM.render(<App />, document.getElementById('app'));
+const root = ReactDOM.createRoot(document.getElementById('app'));
+root.render(html`<${App} />`);
