@@ -5,39 +5,33 @@ import { Copy, Users, Globe, Zap, Check, Terminal, Share2 } from 'lucide-react';
 
 const html = htm.bind(React.createElement);
 
-const DOCS_MARKDOWN = `### 🌐 Websim Realtime Architecture
+const DOCS_MARKDOWN = `### 🍊 Reddit Devvit Realtime Architecture Guide
 
-Websim provides a global \`WebsimSocket\` class for multi-user synchronization. It handles three primary types of data:
+**1. Core Concepts: Client/Server Model**
+Unlike Websim's P2P model, Reddit uses an authoritative server model for security.
+- **Client**: Subscribes to "channels" for event streams.
+- **Server**: Validates actions and broadcasts updates via backend logic.
+- **Redis**: The "source of truth" (XP, scores, positions) persisting across sessions.
 
-1. **Room State (\`roomState\`)**
-   - Shared global data synchronized across all clients.
-   - Best for: Game settings, world objects, shared scores.
-   - Update: \`room.updateRoomState({ key: value })\`
+**2. Implementation: Blocks vs Web**
 
-2. **Player Presence (\`presence\`)**
-   - Per-client data owned by individual users.
-   - Best for: Player positions, health, inventory, animations.
-   - Update: \`room.updatePresence({ x: 100, y: 100 })\`
+**A. Devvit Blocks (Native UI)**
+- \`useChannel\`: Hook to subscribe to channels (handle \`onMessage\`, \`onConnect\`).
+- \`channel.send\`: Peer-to-peer sync (client-to-client).
+- \`context.realtime.send\`: Backend push (server-to-client).
 
-3. **Events (\`send/onmessage\`)**
-   - Ephemeral, one-time messages.
-   - Best for: Sound triggers, visual effects, chat messages.
-   - Method: \`room.send({ type: 'explosion', x: 50 })\`
+**B. Devvit Web (Webview/Phaser)**
+- **Client**: Use \`connectRealtime\` to manage socket lifecycle.
+- **Server**: Webview sends HTTP req -> Server Logic -> \`realtime.send\` broadcasts to channel.
 
-**Initialization Pattern:**
-\`\`\`javascript
-const room = new WebsimSocket();
-await room.initialize();
+**3. Example Flow: "Raid" Event**
+1. **Redis**: Stores Boss Health.
+2. **Action**: Player attacks -> Server validates & updates Redis.
+3. **Sync**: Server uses \`realtime.send\` to push new health to all clients.
 
-// Listen for any changes
-room.subscribePresence((p) => console.log("Users updated", p));
-room.subscribeRoomState((s) => console.log("World updated", s));
-
-// Listen for events
-room.onmessage = (event) => {
-  if (event.data.type === 'ping') playSound();
-};
-\`\`\``;
+**4. Quotas**
+- **Throughput**: 100 messages/sec per installation.
+- **Payload**: 1 MB max size.`;
 
 const App = () => {
     const [room, setRoom] = useState(null);
@@ -123,7 +117,7 @@ const App = () => {
                         className="presence-cursor fixed flex flex-col items-center"
                         style=${{ left: `${data.cursor.x}%`, top: `${data.cursor.y}%` }}
                     >
-                        <div className="w-4 h-4 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50 border-2 border-white" />
+                        <div className="w-4 h-4 rounded-full bg-orange-500 shadow-lg shadow-orange-500/50 border-2 border-white" />
                         <span className="text-[10px] bg-black/80 px-1 rounded mt-1 whitespace-nowrap border border-white/20">
                             ${peer.username}
                         </span>
@@ -132,15 +126,15 @@ const App = () => {
             })}
 
             <header className="mb-12">
-                <div className="flex items-center gap-2 text-blue-400 font-bold mb-2">
+                <div className="flex items-center gap-2 text-orange-500 font-bold mb-2">
                     <${Zap} size=${20} />
-                    <span>WEBSIM REALTIME GUIDE</span>
+                    <span>REDDIT DEVVIT REALTIME REF</span>
                 </div>
-                <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">
-                    Multiplayer State Sync
+                <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
+                    Devvit Architecture
                 </h1>
                 <p className="text-gray-400 max-w-2xl text-lg">
-                    Websim handles all the heavy lifting of WebSockets for you. This page itself is a live multiplayer demo.
+                    A reference guide for Reddit's Realtime Platform architecture (Channels, Redis, Blocks), running on a Websim demo.
                 </p>
             </header>
 
@@ -201,14 +195,14 @@ const App = () => {
                 <div className="bg-white/5 p-4 flex items-center justify-between border-b border-white/10">
                     <div className="flex items-center gap-2 font-bold text-gray-300">
                         <${Terminal} size=${18} />
-                        <span>Technical Documentation</span>
+                        <span>Devvit Realtime Docs</span>
                     </div>
                     <button 
                         onClick=${copyToClipboard}
-                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all active:scale-95 shadow-lg shadow-blue-600/20"
+                        className="flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all active:scale-95 shadow-lg shadow-orange-600/20"
                     >
                         <${Copy} size=${16} />
-                        Copy Technical Summary
+                        Copy Reddit Docs
                     </button>
                 </div>
                 <div className="p-6 md:p-8 bg-[#050505]">
@@ -221,9 +215,9 @@ const App = () => {
             </section>
 
             ${showToast && html`
-                <div className="copy-toast fixed bottom-8 left-1/2 -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 z-[100] font-bold">
+                <div className="copy-toast fixed bottom-8 left-1/2 -translate-x-1/2 bg-orange-500 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 z-[100] font-bold">
                     <${Check} size=${20} />
-                    Documentation copied to clipboard!
+                    Reddit Docs copied to clipboard!
                 </div>
             `}
 
